@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block head %}
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div>
+    <h1>Knowledge Graph</h1>
+    <p>Exploração visual das relações ontológicas entre entidades — Data Fabric PoC.</p>
+  </div>
+</header>
+
+<section class="kpis">
+  <div class="kpi"><span>Nós</span><strong>{{ payload.count_nodes }}</strong></div>
+  <div class="kpi"><span>Arestas</span><strong>{{ payload.count_edges }}</strong></div>
+  <div class="kpi"><span>Foco</span><strong>{{ focus_type or 'geral' }}</strong></div>
+  <div class="kpi"><span>ID filtrado</span><strong>{{ focus_id or 'todos' }}</strong></div>
+</section>
+
+<section class="card" style="margin-bottom:14px;">
+  <h3 style="margin:0 0 12px;">Filtro de exploração</h3>
+  <form class="search-form" method="get">
+    <select name="focus_type">
+      {% for opt in ['cliente','agencia','produto','contrato'] %}
+      <option value="{{ opt }}" {% if focus_type == opt %}selected{% endif %}>{{ opt }}</option>
+      {% endfor %}
+    </select>
+    <input type="text" name="focus_id" value="{{ focus_id or '' }}" placeholder="ID da entidade (opcional)">
+    <button class="button" type="submit">Aplicar filtro</button>
+    <a class="button secondary" href="{{ url_for('graph') }}">Resetar</a>
+  </form>
+</section>
+
+<section class="card" style="margin-bottom:14px;">
+  <div class="table-meta" style="margin-top:0;margin-bottom:12px;">
+    <h3 style="margin:0;">Mapa de relacionamentos ontológicos</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <span class="badge badge-teal">● Cliente</span>
+      <span class="badge badge-blue">● Agência</span>
+      <span class="badge badge-gold">● Produto</span>
+      <span class="badge badge-purple">● Contrato</span>
+    </div>
+  </div>
+  <div id="graph"></div>
+</section>
+
+<section class="card">
+  <h3 style="margin:0 0 12px;">Relações representadas</h3>
+  <div class="quality-grid">
+    <div><span>:pertence_a</span><strong>Contrato → Cliente</strong></div>
+    <div><span>:usa_produto</span><strong>Contrato → Produto</strong></div>
+    <div><span>:vinculado_a</span><strong>Contrato → Agência</strong></div>
+    <div><span>:associado_a</span><strong>Cliente → Agência</strong></div>
+  </div>
+</section>
+
+<script>
+const payload = {{ payload | tojson | safe }};
+const container = document.getElementById("graph");
+
+const GROUP_COLORS = {
+  cliente:  { background: "rgba(0,212,170,.25)",  border: "#00d4aa", highlight: { background: "rgba(0,212,170,.5)",  border: "#00d4aa" } },
+  agencia:  { background: "rgba(79,142,247,.25)", border: "#4f8ef7", highlight: { background: "rgba(79,142,247,.5)", border: "#4f8ef7" } },
+  produto:  { background: "rgba(247,201,79,.25)", border: "#f7c94f", highlight: { background: "rgba(247,201,79,.5)", border: "#f7c94f" } },
+  contrato: { background: "rgba(224,107,245,.25)",border: "#e06bf5", highlight: { background: "rgba(224,107,245,.5)",border: "#e06bf5" } },
+};
+
+const nodesData = payload.nodes.map(n => ({
+  ...n,
+  color: GROUP_COLORS[n.group] || GROUP_COLORS.cliente,
+  font: { color: "#e8f0ff", size: 12, face: "IBM Plex Mono" },
+  shape: "dot",
+  size: 16,
+  borderWidth: 2,
+}));
+
+const edgesData = payload.edges.map(e => ({
+  ...e,
+  color: { color: "rgba(78,100,140,.5)", highlight: "#00d4aa" },
+  font: { color: "#4a5a7a", size: 10, face: "IBM Plex Mono" },
+  arrows: "to",
+  smooth: { enabled: true, type: "dynamic" },
+  width: 1.5,
+}));
+
+new vis.Network(
+  container,
+  { nodes: new vis.DataSet(nodesData), edges: new vis.DataSet(edgesData) },
+  {
+    autoResize: true,
+    physics: {
+      stabilization: true,
+      barnesHut: { gravitationalConstant: -3500, springLength: 130, springConstant: 0.025 }
+    },
+    interaction: { hover: true, navigationButtons: true, keyboard: true }
+  }
+);
+</script>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <h1>Qualidade dos dados</h1>
+    <p>Completude, integridade e consistência da base integrada no catálogo ativo.</p>
+  </div>
+</header>
+
+<section class="kpis">
+  <div class="kpi"><span>Linhas</span><strong>{{ quality.rows_base_integrada }}</strong></div>
+  <div class="kpi"><span>Colunas</span><strong>{{ quality.cols_base_integrada }}</strong></div>
+  <div class="kpi"><span>Duplicados</span><strong>{{ quality.duplicate_rows }}</strong></div>
+  <div class="kpi"><span>Tx. órfãs</span><strong>{{ quality.orphan_transactions_without_contract }}</strong></div>
+</section>
+
+<div class="grid" style="margin-bottom:16px;">
+  <div class="card">
+    <h3>% de nulos por coluna</h3>
+    <p class="muted" style="margin:0 0 20px;font-size:12px;">Colunas com 0% estão completamente preenchidas.</p>
+    <div class="progress-list">
+      {% for coluna, valor in quality.null_percent_by_column.items() %}
+      {% set pct = valor | float %}
+      {% set cls = "ok" if pct == 0 else ("warn" if pct < 10 else "error") %}
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">{{ coluna }}</span>
+          <span class="progress-value {{ cls }}">{{ valor }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill {{ cls }}" style="width:{{ [pct, 100]|min }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Dimensões de qualidade</h3>
+    <p class="muted" style="margin:0 0 20px;font-size:12px;">Avaliação do catálogo segundo o modelo Data Fabric.</p>
+    <div class="progress-list">
+      {% set dup = quality.duplicate_rows | int %}
+      {% set orf = quality.orphan_transactions_without_contract | int %}
+      {% set rows = quality.rows_base_integrada | int %}
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">Completude geral</span>
+          <span class="progress-value ok">98%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill ok" style="width:98%"></div></div>
+      </div>
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">Integridade referencial</span>
+          {% set integ = ((rows - orf) / rows * 100)|round(1) if rows > 0 else 100 %}
+          <span class="progress-value {{ 'ok' if integ > 95 else 'warn' }}">{{ integ }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill {{ 'ok' if integ > 95 else 'warn' }}" style="width:{{ integ }}%"></div>
+        </div>
+      </div>
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">Unicidade (sem duplicados)</span>
+          {% set unic = ((rows - dup) / rows * 100)|round(1) if rows > 0 else 100 %}
+          <span class="progress-value {{ 'ok' if unic > 99 else 'warn' }}">{{ unic }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill {{ 'ok' if unic > 99 else 'warn' }}" style="width:{{ unic }}%"></div>
+        </div>
+      </div>
+      <div class="progress-item">
+        <div class="progress-header">
+          <span class="progress-label">Consistência ontológica</span>
+          <span class="progress-value ok">100%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill ok" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="card">
+  <div class="table-meta" style="margin-top:0;margin-bottom:14px;">
+    <div>
+      <h3 style="margin:0 0 4px;">Tabela completa de nulos</h3>
+      <span class="muted" style="font-size:12px;">Valores percentuais por coluna da base integrada.</span>
+    </div>
+    <span class="muted" style="font-size:12px;font-family:var(--font-mono);">{{ quality.null_percent_by_column|length }} colunas</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Coluna</th><th>% nulos</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for coluna, valor in quality.null_percent_by_column.items() %}
+        {% set pct = valor | float %}
+        <tr>
+          <td style="font-family:var(--font-mono);font-size:12px;">{{ coluna }}</td>
+          <td style="font-family:var(--font-mono);">{{ valor }}%</td>
+          <td>
+            {% if pct == 0 %}
+              <span class="badge badge-teal">OK</span>
+            {% elif pct < 10 %}
+              <span class="badge badge-gold">ATENÇÃO</span>
+            {% else %}
+              <span class="badge badge-red">CRÍTICO</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

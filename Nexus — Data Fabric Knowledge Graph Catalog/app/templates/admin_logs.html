@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <h1>Admin · Pipeline ETL</h1>
+    <p>Painel de auditoria, rastreabilidade operacional e controle de execução do pipeline de integração.</p>
+  </div>
+  <form method="post" action="{{ url_for('run_etl') }}">
+    <button class="button" type="submit">▶ Executar ETL</button>
+  </form>
+</header>
+
+<section class="quality-grid" style="margin-bottom:16px;">
+  <div><span>Etapa 1</span><strong>Extract</strong></div>
+  <div><span>Etapa 2</span><strong>Transform</strong></div>
+  <div><span>Etapa 3</span><strong>Load → SQLite</strong></div>
+  <div><span>Fontes</span><strong>CSV · Excel · JSON · SQLite</strong></div>
+</section>
+
+<section class="card">
+  <div class="table-meta" style="margin-top:0;margin-bottom:14px;">
+    <div>
+      <h3 style="margin:0 0 4px;">Log de auditoria operacional</h3>
+      <span class="muted" style="font-size:12px;">Registro cronológico de acessos, execuções e eventos do sistema.</span>
+    </div>
+    <span class="muted" style="font-family:var(--font-mono);font-size:12px;">{{ rows|length }} eventos</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Timestamp</th><th>Usuário</th><th>Ação</th><th>Detalhe</th></tr>
+      </thead>
+      <tbody>
+        {% for ts, username, action, detail in rows %}
+        <tr>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">{{ ts }}</td>
+          <td>
+            <span class="badge {% if username == 'admin' %}badge-gold{% else %}badge-blue{% endif %}">
+              {{ username }}
+            </span>
+          </td>
+          <td>
+            <span class="log-action
+              {% if 'login' in action %}log-login
+              {% elif 'etl' in action %}log-etl
+              {% elif 'admin' in action or 'export' in action %}log-export
+              {% else %}log-view{% endif %}">
+              {{ action }}
+            </span>
+          </td>
+          <td style="color:var(--muted);font-size:12px;max-width:300px;white-space:normal;">{{ detail }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

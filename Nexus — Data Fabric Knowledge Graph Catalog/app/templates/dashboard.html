@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div>
+    <h1>Dashboard Executivo</h1>
+    <p>Visão analítica consolidada da base integrada — Knowledge Graph Data Fabric PoC.</p>
+  </div>
+</header>
+
+<section class="kpis">
+  <div class="kpi"><span>Clientes</span><strong>{{ summary.clients }}</strong></div>
+  <div class="kpi"><span>Agências</span><strong>{{ summary.agencies }}</strong></div>
+  <div class="kpi"><span>Produtos</span><strong>{{ summary.products }}</strong></div>
+  <div class="kpi"><span>Contratos</span><strong>{{ summary.contracts }}</strong></div>
+  <div class="kpi"><span>Transações</span><strong>{{ summary.transactions }}</strong></div>
+</section>
+
+<section class="grid">
+  <div class="card chart-card">
+    <div class="table-meta" style="margin-top:0;margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0 0 4px;">Produtos mais contratados</h3>
+        <span class="muted" style="font-size:12px;">Entidades de Produto — nós do Knowledge Graph</span>
+      </div>
+    </div>
+    <canvas id="c1"></canvas>
+  </div>
+
+  <div class="card chart-card">
+    <div class="table-meta" style="margin-top:0;margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0 0 4px;">Clientes por volume de transações</h3>
+        <span class="muted" style="font-size:12px;">Entidades de Cliente — arestas :possui no grafo</span>
+      </div>
+    </div>
+    <canvas id="c2"></canvas>
+  </div>
+
+  <div class="card chart-card">
+    <div class="table-meta" style="margin-top:0;margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0 0 4px;">Agências por valor movimentado</h3>
+        <span class="muted" style="font-size:12px;">Entidades de Agência — relação :vinculado_a</span>
+      </div>
+    </div>
+    <canvas id="c3"></canvas>
+  </div>
+
+  <div class="card chart-card">
+    <div class="table-meta" style="margin-top:0;margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0 0 4px;">Distribuição por tipo de transação</h3>
+        <span class="muted" style="font-size:12px;">Propriedade :transacao_tipo da ontologia</span>
+      </div>
+    </div>
+    <canvas id="c4"></canvas>
+  </div>
+
+  <div class="card chart-card full">
+    <div class="table-meta" style="margin-top:0;margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0 0 4px;">Evolução mensal do valor transacionado</h3>
+        <span class="muted" style="font-size:12px;">Dimensão temporal — série histórica integrada via ETL</span>
+      </div>
+    </div>
+    <canvas id="c5"></canvas>
+  </div>
+</section>
+
+<section class="card" style="margin-top:16px;">
+  <div class="table-meta" style="margin-top:0;margin-bottom:16px;">
+    <div>
+      <h3 style="margin:0 0 4px;">Métricas da base integrada</h3>
+      <span class="muted" style="font-size:12px;">Indicadores de completude e integridade do catálogo ativo.</span>
+    </div>
+  </div>
+  <div class="quality-grid">
+    <div><span>Linhas da base</span><strong>{{ payload.quality.rows_base_integrada }}</strong></div>
+    <div><span>Colunas</span><strong>{{ payload.quality.cols_base_integrada }}</strong></div>
+    <div><span>Duplicados</span><strong>{{ payload.quality.duplicate_rows }}</strong></div>
+    <div><span>Transações órfãs</span><strong>{{ payload.quality.orphan_transactions_without_contract }}</strong></div>
+  </div>
+</section>
+
+<script>
+const payload = {{ payload | tojson | safe }};
+
+const isDark = () => document.documentElement.getAttribute("data-theme") === "dark";
+const grid   = () => isDark() ? "rgba(30,45,74,.6)"  : "rgba(226,232,240,.7)";
+const label  = () => isDark() ? "#4a5a7a" : "#94a3b8";
+const text   = () => isDark() ? "#e8f0ff" : "#0f172a";
+
+const COLORS = {
+  teal:   "rgba(0,212,170,.8)",
+  blue:   "rgba(79,142,247,.8)",
+  gold:   "rgba(247,201,79,.8)",
+  purple: "rgba(224,107,245,.8)",
+  red:    "rgba(255,90,126,.8)",
+};
+const PALETTE = Object.values(COLORS);
+
+function baseOpts(title) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => " " + ctx.formattedValue } }
+    },
+    scales: {
+      x: { ticks: { color: label(), font: { family: "IBM Plex Mono", size: 11 } }, grid: { color: grid() } },
+      y: { ticks: { color: label(), font: { family: "IBM Plex Mono", size: 11 } }, grid: { color: grid() } }
+    }
+  };
+}
+
+new Chart(document.getElementById("c1"), {
+  type: "bar",
+  data: {
+    labels: payload.produtos_labels,
+    datasets: [{ label: "Contratos", data: payload.produtos_values,
+      backgroundColor: payload.produtos_labels.map((_, i) => PALETTE[i % PALETTE.length]),
+      borderRadius: 6 }]
+  },
+  options: baseOpts()
+});
+
+new Chart(document.getElementById("c2"), {
+  type: "bar",
+  data: {
+    labels: payload.clientes_labels,
+    datasets: [{ label: "Transações", data: payload.clientes_values,
+      backgroundColor: COLORS.teal, borderRadius: 6 }]
+  },
+  options: baseOpts()
+});
+
+new Chart(document.getElementById("c3"), {
+  type: "bar",
+  data: {
+    labels: payload.agencias_labels,
+    datasets: [{ label: "Valor", data: payload.agencias_values,
+      backgroundColor: COLORS.blue, borderRadius: 6 }]
+  },
+  options: baseOpts()
+});
+
+new Chart(document.getElementById("c4"), {
+  type: "doughnut",
+  data: {
+    labels: payload.tipos_labels,
+    datasets: [{ data: payload.tipos_values, backgroundColor: PALETTE, borderWidth: 0 }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "bottom", labels: { color: text(), font: { family: "IBM Plex Mono", size: 11 }, boxWidth: 12 } }
+    }
+  }
+});
+
+new Chart(document.getElementById("c5"), {
+  type: "line",
+  data: {
+    labels: payload.mensal_labels,
+    datasets: [{
+      label: "Valor mensal",
+      data: payload.mensal_values,
+      borderColor: COLORS.teal,
+      backgroundColor: "rgba(0,212,170,.08)",
+      tension: 0.3,
+      fill: true,
+      pointRadius: 3,
+      pointBackgroundColor: COLORS.teal
+    }]
+  },
+  options: {
+    ...baseOpts(),
+    plugins: { legend: { display: false } }
+  }
+});
+</script>
+{% endblock %}

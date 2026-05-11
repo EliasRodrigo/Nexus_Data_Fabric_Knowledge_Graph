@@ -1,0 +1,27 @@
+﻿coluna,tipo_dado,origem,descricao,percentual_nulos,exemplo
+id_transacao,int64,transacoes.json,Identificador da transação.,0.0,1
+id_contrato,int64,contratos.db/transacoes.json,Identificador do contrato.,0.0,14422
+transacao_data,datetime64[ns],transacoes.json,Data e hora da transação.,0.0,2024-09-16 23:50:58
+transacao_valor,float64,transacoes.json,Valor da transação.,0.0,10.16
+transacao_tipo,object,transacoes.json,Tipo da transação.,0.0,Pagamento
+id_cliente,int64,clientes.csv,Identificador único do cliente.,0.0,812
+id_produto,int64,produtos.xlsx/contratos.db,Identificador do produto financeiro.,0.0,27
+id_agencia,int64,agencias.csv/contratos.db,Identificador da agência.,0.0,65
+contrato_valor,float64,contratos.db,Valor do contrato.,0.0,7922.34
+contrato_data,datetime64[ns],contratos.db,Data de criação do contrato.,0.0,2026-01-04 00:00:00
+cliente_nome,object,clientes.csv,Nome completo do cliente.,0.0,Dr. João Miguel Pacheco
+cpf,object,clientes.csv,CPF do cliente.,0.0,395.718.620-02
+email,object,clientes.csv,E-mail do cliente.,0.0,barrosluiz-miguel@example.net
+telefone,object,clientes.csv,Telefone do cliente.,0.0,+55 61 4651 3067
+endereco,object,clientes.csv,Endereço do cliente.,0.0,"Conjunto de Rodrigues, 74, Vila Petropolis, 14907413 Câmara / TO"
+nome_agencia,object,agencias.csv,Nome da agência.,0.0,Agência 065
+cidade,object,agencias.csv,Cidade da agência.,0.0,Sales
+estado,object,agencias.csv,UF da agência.,0.0,ES
+produto_nome,object,produtos.xlsx,Nome do produto financeiro.,0.0,Poupança 27
+produto_tipo,object,produtos.xlsx,Categoria do produto financeiro.,0.0,Poupança
+taxa_juros,float64,produtos.xlsx,Taxa de juros associada ao produto.,0.0,2.02
+ano_mes,object,Derivado,Competência no formato AAAA-MM.,0.0,2024-09
+ano,int32,Derivado,Ano da transação.,0.0,2024
+mes,int32,Derivado,Mês da transação.,0.0,9
+dia,int32,Derivado,Dia da transação.,0.0,16
+faixa_valor_transacao,object,Derivado,Classificação do valor da transação em faixas.,0.0,Até 100

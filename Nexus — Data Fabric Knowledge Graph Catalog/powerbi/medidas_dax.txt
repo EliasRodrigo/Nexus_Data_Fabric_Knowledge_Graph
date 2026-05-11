@@ -1,0 +1,12 @@
+
+-- Medidas sugeridas em DAX
+
+Total Transações = COUNTROWS(fato_transacoes)
+Valor Total Transacionado = SUM(fato_transacoes[transacao_valor])
+Ticket Médio = DIVIDE([Valor Total Transacionado], [Total Transações])
+Total Contratos = COUNTROWS(fato_contratos)
+Clientes Únicos = DISTINCTCOUNT(dim_cliente[id_cliente])
+Agências Únicas = DISTINCTCOUNT(dim_agencia[id_agencia])
+Produtos Únicos = DISTINCTCOUNT(dim_produto[id_produto])
+Valor Médio por Agência = DIVIDE([Valor Total Transacionado], [Agências Únicas])
+Valor Médio por Cliente = DIVIDE([Valor Total Transacionado], [Clientes Únicos])

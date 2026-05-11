@@ -1,0 +1,7 @@
+﻿arquivo,papel_no_modelo,chave_primaria,uso
+fato_transacoes.csv,Fato,id_transacao,Movimentações
+fato_contratos.csv,Fato,id_contrato,Contratos
+dim_cliente.csv,Dimensão,id_cliente,Perfil de cliente
+dim_agencia.csv,Dimensão,id_agencia,Localidade de agência
+dim_produto.csv,Dimensão,id_produto,Portfólio de produto
+dim_tempo.csv,Dimensão,data_key,Calendário

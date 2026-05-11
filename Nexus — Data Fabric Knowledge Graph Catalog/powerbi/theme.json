@@ -1,0 +1,16 @@
+{
+  "name": "TCC Enterprise Theme",
+  "dataColors": [
+    "#2563eb",
+    "#1d4ed8",
+    "#0ea5e9",
+    "#0284c7",
+    "#22c55e",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6"
+  ],
+  "background": "#f8fafc",
+  "foreground": "#0f172a",
+  "tableAccent": "#2563eb"
+}
