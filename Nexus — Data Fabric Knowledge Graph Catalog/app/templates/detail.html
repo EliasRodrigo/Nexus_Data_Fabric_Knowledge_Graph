@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ label }}{% endblock %}
+{% block page_title %}{{ entity_type|title }}: {{ label }}{% endblock %}
+{% block content %}
+<div class="kpi-grid mb-4">
+  <div class="kpi-card teal"><div class="kpi-icon">💳</div><div class="kpi-value font-mono">{{ metrics.transacoes }}</div><div class="kpi-label">Transações</div></div>
+  <div class="kpi-card red"><div class="kpi-icon">🚨</div><div class="kpi-value font-mono">{{ metrics.fraudes }}</div><div class="kpi-label">Fraudes</div></div>
+  <div class="kpi-card gold"><div class="kpi-icon">💰</div><div class="kpi-value font-mono" style="font-size:18px">R$ {{ '{:,.2f}'.format(metrics.valor_total) }}</div><div class="kpi-label">Volume total</div></div>
+  <div class="kpi-card blue"><div class="kpi-icon">📊</div><div class="kpi-value font-mono">R$ {{ '{:,.2f}'.format(metrics.ticket_medio) }}</div><div class="kpi-label">Ticket médio</div></div>
+</div>
+<div class="card">
+  <div class="card-header"><div class="card-title">Transações relacionadas</div></div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead><tr>{% for c in columns %}<th>{{ c.replace('_',' ').title() }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          {% for c in columns %}
+          <td>
+            {% if c == 'fraude' %}{% if row[c] %}<span class="fraud-tag fraud-yes">🚨</span>{% else %}<span class="fraud-tag fraud-no">✓</span>{% endif %}
+            {% elif 'valor' in c %}<span class="font-mono">R$ {{ "%.2f"|format(row[c]|float) }}</span>
+            {% else %}{{ row[c] or '—' }}{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

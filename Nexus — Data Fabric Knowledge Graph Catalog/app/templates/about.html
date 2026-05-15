@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <h1>Sobre o projeto</h1>
+    <p>Unificação Semântica de Metadados em Ambientes Heterogêneos · Knowledge Graphs · Data Fabric.</p>
+  </div>
+</header>
+
+<section class="quality-grid" style="margin-bottom:16px;">
+  <div><span>Disciplina</span><strong>TCC530 – Turma 2</strong></div>
+  <div><span>Curso</span><strong>Ciência de Dados</strong></div>
+  <div><span>Instituição</span><strong>UNIVESP</strong></div>
+  <div><span>Orientador</span><strong>Felipe Ivo da Silva</strong></div>
+  <div><span>Ano</span><strong>2026</strong></div>
+  <div><span>Grupo</span><strong>Grupo 4</strong></div>
+</section>
+
+<div class="grid" style="margin-bottom:16px;">
+  <div class="card">
+    <h3>Problema de pesquisa</h3>
+    <p class="muted" style="font-size:14px;line-height:1.7;">
+      Grandes organizações mantêm dados distribuídos em múltiplos silos — sistemas heterogêneos,
+      formatos distintos e sem metadados padronizados. Isso dificulta integração, governança
+      e exploração analítica centralizada, configurando o fenômeno descrito por Lenzerini (2002)
+      como <em>data silos</em>.
+    </p>
+  </div>
+  <div class="card">
+    <h3>Solução proposta</h3>
+    <p class="muted" style="font-size:14px;line-height:1.7;">
+      Construção automatizada de um <strong>Knowledge Graph</strong> para unificação semântica
+      de metadados, materializado como Prova de Conceito (PoC) orientada à arquitetura
+      <strong>Data Fabric</strong> (Jonker &amp; Krantz, s.d.). Demonstra catálogos de dados
+      ativos via ontologias RDF/OWL e consultas Cypher no Neo4j.
+    </p>
+  </div>
+</div>
+
+<section class="card" style="margin-bottom:16px;">
+  <h3>Arquitetura do sistema</h3>
+  <div class="quality-grid" style="margin-top:14px;">
+    <div><span>Ingestão (Extract)</span><strong>CSV · Excel · JSON · SQLite</strong></div>
+    <div><span>Transformação</span><strong>Python 3 + Pandas</strong></div>
+    <div><span>Carga (Load)</span><strong>SQLite Warehouse</strong></div>
+    <div><span>Grafo de conhecimento</span><strong>NetworkX · vis.js</strong></div>
+    <div><span>Aplicação web</span><strong>Flask + Jinja2</strong></div>
+    <div><span>Visualização</span><strong>Chart.js · vis-network</strong></div>
+  </div>
+</section>
+
+<section class="card" style="margin-bottom:16px;">
+  <h3>Ontologia fundacional</h3>
+  <p class="muted" style="margin:0 0 14px;font-size:13px;">
+    Cinco classes e cinco propriedades de objeto definem o vocabulário semântico do grafo.
+  </p>
+  <div class="ontology-block">
+<span class="ot-class">:Cliente</span>  <span class="ot-kw">rdfs:subClassOf</span>  <span class="ot-type">:Entidade</span>
+<span class="ot-class">:Agência</span>  <span class="ot-kw">rdfs:subClassOf</span>  <span class="ot-type">:Entidade</span>
+<span class="ot-class">:Produto</span>  <span class="ot-kw">rdfs:subClassOf</span>  <span class="ot-type">:Entidade</span>
+<span class="ot-class">:Contrato</span> <span class="ot-kw">rdfs:subClassOf</span>  <span class="ot-type">:Entidade</span>
+
+<span class="ot-prop">:pertence_a</span>   <span class="ot-kw">rdfs:domain</span>  <span class="ot-class">:Contrato</span>  <span class="ot-kw">rdfs:range</span>  <span class="ot-class">:Cliente</span>
+<span class="ot-prop">:usa_produto</span>  <span class="ot-kw">rdfs:domain</span>  <span class="ot-class">:Contrato</span>  <span class="ot-kw">rdfs:range</span>  <span class="ot-class">:Produto</span>
+<span class="ot-prop">:vinculado_a</span>  <span class="ot-kw">rdfs:domain</span>  <span class="ot-class">:Contrato</span>  <span class="ot-kw">rdfs:range</span>  <span class="ot-class">:Agência</span>
+<span class="ot-prop">:associado_a</span>  <span class="ot-kw">rdfs:domain</span>  <span class="ot-class">:Cliente</span>   <span class="ot-kw">rdfs:range</span>  <span class="ot-class">:Agência</span>
+  </div>
+</section>
+
+{% endblock %}

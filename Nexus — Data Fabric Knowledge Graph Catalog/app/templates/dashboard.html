@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}📊 Dashboard Analítico{% endblock %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+<style>
+.kpi-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:22px}
+.kpi-box{
+  flex:1;min-width:150px;
+  background:var(--bg2,#111827);
+  border:1px solid var(--border,#2a3a50);
+  border-radius:12px;padding:18px 16px;position:relative;overflow:hidden;
+}
+.kpi-box::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-box.c-teal::after{background:#00d4aa}
+.kpi-box.c-blue::after{background:#4f8ef7}
+.kpi-box.c-gold::after{background:#f7c94f}
+.kpi-box.c-purple::after{background:#a78bfa}
+.kpi-box.c-red::after{background:#ff5a7e}
+.kpi-box.c-green::after{background:#4ade80}
+.kpi-icon{font-size:22px;margin-bottom:10px;display:block}
+.kpi-num{font-size:24px;font-weight:700;color:#e2e8f0;font-family:monospace;line-height:1}
+.kpi-lbl{font-size:12px;color:#94a3b8;margin-top:5px;font-weight:500}
+.kpi-sub{font-size:11px;color:#64748b;margin-top:4px}
+.kpi-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-top:6px}
+.kpi-tag.red{background:rgba(255,90,126,.15);color:#ff5a7e}
+.chart-row{display:grid;gap:14px;margin-bottom:14px}
+.row-7-5{grid-template-columns:7fr 5fr}
+.row-5-4-3{grid-template-columns:5fr 4fr 3fr}
+.row-5-7{grid-template-columns:5fr 7fr}
+.row-6-6{grid-template-columns:6fr 6fr}
+.chart-card{
+  background:var(--bg2,#111827);border:1px solid var(--border,#2a3a50);
+  border-radius:12px;overflow:hidden;
+}
+.chart-card .ch{padding:14px 18px;border-bottom:1px solid var(--border,#2a3a50);
+  display:flex;align-items:center;justify-content:space-between}
+.chart-card .ct{font-size:13px;font-weight:600;color:#e2e8f0}
+.chart-card .cb{padding:16px}
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid}
+.tag.teal{background:rgba(0,212,170,.1);color:#00d4aa;border-color:rgba(0,212,170,.3)}
+.tag.red{background:rgba(255,90,126,.1);color:#ff5a7e;border-color:rgba(255,90,126,.3)}
+.tag.gold{background:rgba(247,201,79,.1);color:#f7c94f;border-color:rgba(247,201,79,.3)}
+.anomaly-table{width:100%;border-collapse:collapse}
+.anomaly-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;
+  color:#64748b;text-transform:uppercase;border-bottom:1px solid var(--border,#2a3a50)}
+.anomaly-table td{padding:9px 12px;font-size:12px;color:#94a3b8;
+  border-bottom:1px solid rgba(42,58,80,.4)}
+.anomaly-table tr:last-child td{border-bottom:none}
+.anomaly-table tr:hover td{background:rgba(255,255,255,.03);color:#e2e8f0}
+.score-bar-w{width:70px;height:4px;background:#1e2a3a;border-radius:2px;display:inline-block;vertical-align:middle}
+.score-bar-f{height:4px;background:#ff5a7e;border-radius:2px}
+.fraud-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;
+  background:rgba(255,90,126,.15);color:#ff5a7e;border:1px solid rgba(255,90,126,.3)}
+</style>
+{% endblock %}
+
+{% block content %}
+{% set s = payload.summary %}
+
+<!-- KPIs -->
+<div class="kpi-row">
+  <div class="kpi-box c-teal">
+    <span class="kpi-icon">💳</span>
+    <div class="kpi-num">{{ '{:,}'.format(s.transactions) }}</div>
+    <div class="kpi-lbl">Transações</div>
+    <div class="kpi-sub">Kaggle Credit Card Dataset</div>
+  </div>
+  <div class="kpi-box c-blue">
+    <span class="kpi-icon">👤</span>
+    <div class="kpi-num">{{ '{:,}'.format(s.clients) }}</div>
+    <div class="kpi-lbl">Clientes únicos</div>
+  </div>
+  <div class="kpi-box c-gold">
+    <span class="kpi-icon">🏦</span>
+    <div class="kpi-num">{{ s.agencies }}</div>
+    <div class="kpi-lbl">Agências BCB</div>
+    <div class="kpi-sub">IF.data – Dez/2024</div>
+  </div>
+  <div class="kpi-box c-purple">
+    <span class="kpi-icon">📦</span>
+    <div class="kpi-num">{{ s.products }}</div>
+    <div class="kpi-lbl">Modalidades de crédito</div>
+    <div class="kpi-sub">Nota de Crédito BCB</div>
+  </div>
+  <div class="kpi-box c-red">
+    <span class="kpi-icon">🚨</span>
+    <div class="kpi-num">{{ '{:,}'.format(s.fraud_total) }}</div>
+    <div class="kpi-lbl">Fraudes detectadas</div>
+    <div class="kpi-tag red">▲ {{ s.fraud_pct }}% do total</div>
+  </div>
+  <div class="kpi-box c-green">
+    <span class="kpi-icon">💰</span>
+    <div class="kpi-num" style="font-size:18px">R$ {{ '{:,.0f}'.format(s.total_amount) }}</div>
+    <div class="kpi-lbl">Volume total transacionado</div>
+    <div class="kpi-sub">Ticket médio: R$ {{ s.avg_amount }}</div>
+  </div>
+</div>
+
+<!-- Linha 1: Volume por hora + Tipos -->
+<div class="chart-row row-7-5" style="margin-bottom:14px">
+  <div class="chart-card">
+    <div class="ch">
+      <span class="ct">🕐 Distribuição de transações por hora do dia</span>
+      <span class="tag red">Fraudes por hora</span>
+    </div>
+    <div class="cb"><canvas id="horaChart" height="180"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="ch"><span class="ct">🔄 Normal vs Fraude</span></div>
+    <div class="cb"><canvas id="tiposChart" height="180"></canvas></div>
+  </div>
+</div>
+
+<!-- Linha 2: Top agências + Faixas de valor -->
+<div class="chart-row row-7-5" style="margin-bottom:14px">
+  <div class="chart-card">
+    <div class="ch"><span class="ct">🏦 Top 10 agências BCB por volume (R$)</span></div>
+    <div class="cb"><canvas id="agenciaChart" height="220"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="ch"><span class="ct">💵 Faixas de valor</span></div>
+    <div class="cb"><canvas id="faixaChart" height="220"></canvas></div>
+  </div>
+</div>
+
+<!-- Linha 3: Produtos + Fraude por produto -->
+<div class="chart-row row-6-6" style="margin-bottom:14px">
+  <div class="chart-card">
+    <div class="ch"><span class="ct">📦 Contratos por modalidade de crédito (BCB)</span></div>
+    <div class="cb"><canvas id="produtoChart" height="200"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="ch"><span class="ct">⚡ Fraudes por modalidade de crédito</span></div>
+    <div class="cb"><canvas id="fraudeProdChart" height="200"></canvas></div>
+  </div>
+</div>
+
+<!-- Linha 4: UF + Anomalias -->
+<div class="chart-row row-5-7">
+  <div class="chart-card">
+    <div class="ch"><span class="ct">🗺 Volume por estado (UF)</span></div>
+    <div class="cb"><canvas id="ufChart" height="220"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="ch">
+      <span class="ct">🔴 Top 10 anomalias detectadas</span>
+      <span class="tag red">Maior anomaly score</span>
+    </div>
+    <div class="cb" style="padding:0">
+      <table class="anomaly-table">
+        <thead><tr><th>ID</th><th>Valor</th><th>Score</th><th>Agência</th></tr></thead>
+        <tbody>
+          {% for a in payload.anomalias %}
+          <tr>
+            <td style="color:#00d4aa;font-family:monospace">#{{ a.id_transacao }}</td>
+            <td style="font-family:monospace">R$ {{ "%.2f"|format(a.transacao_valor|float) }}</td>
+            <td>
+              <div class="score-bar-w"><div class="score-bar-f" style="width:{{ [a.anomaly_score|float * 4, 100]|min }}%"></div></div>
+              <span style="font-family:monospace;font-size:11px;margin-left:6px">{{ "%.2f"|format(a.anomaly_score|float) }}</span>
+            </td>
+            <td style="font-size:11px">{{ (a.nome_agencia or '—')[:22] }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" style="text-align:center;padding:20px;color:#64748b">Sem dados</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Dados do servidor
+const P = {{ payload | tojson }};
+
+// Verificação de sanidade
+console.log("Payload carregado:", {
+  agencias: P.agencias_labels.length,
+  produtos: P.produtos_labels.length,
+  tipos: P.tipos_labels.length,
+  mensal: P.mensal_labels.length,
+  horas: P.fraude_hora_labels.length,
+  anomalias: P.anomalias.length
+});
+
+// Paleta de cores
+const C = {
+  teal:   '#00d4aa',
+  blue:   '#4f8ef7',
+  gold:   '#f7c94f',
+  purple: '#a78bfa',
+  red:    '#ff5a7e',
+  green:  '#4ade80',
+  orange: '#fb923c',
+};
+const PALETTE = [C.teal,C.blue,C.gold,C.purple,C.red,C.green,C.orange,'#38bdf8','#e879f9','#a3e635'];
+
+// Defaults comuns para todos os gráficos
+const DEF = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#1a2332',
+      borderColor: '#2a3a50',
+      borderWidth: 1,
+      titleColor: '#e2e8f0',
+      bodyColor: '#94a3b8',
+    }
+  },
+  scales: {
+    x: { ticks:{color:'#64748b',font:{size:10}}, grid:{color:'rgba(42,58,80,.5)'} },
+    y: { ticks:{color:'#64748b',font:{size:10}}, grid:{color:'rgba(42,58,80,.5)'} },
+  }
+};
+
+// ── 1. Horas do dia ───────────────────────────────────────────
+new Chart(document.getElementById('horaChart'), {
+  type: 'bar',
+  data: {
+    labels: P.fraude_hora_labels.map(h => h + 'h'),
+    datasets: [
+      {
+        label: 'Total',
+        data: P.fraude_hora_total,
+        backgroundColor: 'rgba(0,212,170,.25)',
+        borderColor: C.teal,
+        borderWidth: 1,
+        borderRadius: 3,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Fraudes',
+        data: P.fraude_hora_fraudes,
+        type: 'line',
+        borderColor: C.red,
+        backgroundColor: 'rgba(255,90,126,.15)',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: C.red,
+        yAxisID: 'y2',
+      }
+    ]
+  },
+  options: {
+    ...DEF,
+    plugins: {
+      ...DEF.plugins,
+      legend: { display: true, labels: { color: '#94a3b8', font:{size:10}, boxWidth:10 } }
+    },
+    scales: {
+      x: DEF.scales.x,
+      y: { ...DEF.scales.y, title:{display:true,text:'Transações',color:'#64748b',font:{size:10}} },
+      y2: { position:'right', ticks:{color:'#64748b',font:{size:10}}, grid:{drawOnChartArea:false},
+            title:{display:true,text:'Fraudes',color:'#64748b',font:{size:10}} }
+    }
+  }
+});
+
+// ── 2. Normal vs Fraude ──────────────────────────────────────
+new Chart(document.getElementById('tiposChart'), {
+  type: 'doughnut',
+  data: {
+    labels: P.tipos_labels,
+    datasets: [{
+      data: P.tipos_values,
+      backgroundColor: [C.red, C.teal],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { display:true, position:'right', labels:{color:'#94a3b8',font:{size:11},boxWidth:12,padding:12} },
+      tooltip: DEF.plugins.tooltip,
+    }
+  }
+});
+
+// ── 3. Agências ──────────────────────────────────────────────
+new Chart(document.getElementById('agenciaChart'), {
+  type: 'bar',
+  data: {
+    labels: P.agencias_siglas,
+    datasets: [{
+      data: P.agencias_vol,
+      backgroundColor: 'rgba(79,142,247,.3)',
+      borderColor: C.blue,
+      borderWidth: 1.5,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    ...DEF,
+    indexAxis: 'y',
+    plugins: {
+      ...DEF.plugins,
+      tooltip: {
+        ...DEF.plugins.tooltip,
+        callbacks: {
+          label: ctx => `R$ ${ctx.parsed.x.toLocaleString('pt-BR', {minimumFractionDigits:0})}`
+        }
+      }
+    }
+  }
+});
+
+// ── 4. Faixas de valor ───────────────────────────────────────
+new Chart(document.getElementById('faixaChart'), {
+  type: 'doughnut',
+  data: {
+    labels: P.faixas_labels,
+    datasets: [{
+      data: P.faixas_values,
+      backgroundColor: [C.teal, C.blue, C.gold, C.purple, C.red],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '60%',
+    plugins: {
+      legend: { display:true, position:'bottom', labels:{color:'#94a3b8',font:{size:10},boxWidth:10,padding:8} },
+      tooltip: DEF.plugins.tooltip,
+    }
+  }
+});
+
+// ── 5. Produtos (donut) ──────────────────────────────────────
+new Chart(document.getElementById('produtoChart'), {
+  type: 'bar',
+  data: {
+    labels: P.produtos_labels.map(l => l.length > 30 ? l.substring(0,28)+'…' : l),
+    datasets: [{
+      data: P.produtos_values,
+      backgroundColor: PALETTE,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    ...DEF,
+    indexAxis: 'y',
+  }
+});
+
+// ── 6. Fraude por produto ────────────────────────────────────
+new Chart(document.getElementById('fraudeProdChart'), {
+  type: 'bar',
+  data: {
+    labels: P.fraude_prod_labels,
+    datasets: [
+      {
+        label: 'Normal',
+        data: P.fraude_prod_total.map((t, i) => t - P.fraude_prod_fraud[i]),
+        backgroundColor: 'rgba(0,212,170,.25)',
+        borderRadius: 4,
+      },
+      {
+        label: 'Fraude',
+        data: P.fraude_prod_fraud,
+        backgroundColor: 'rgba(255,90,126,.65)',
+        borderRadius: 4,
+      }
+    ]
+  },
+  options: {
+    ...DEF,
+    scales: {
+      x: { ...DEF.scales.x, stacked: true },
+      y: { ...DEF.scales.y, stacked: true },
+    },
+    plugins: {
+      ...DEF.plugins,
+      legend: { display:true, labels:{color:'#94a3b8',font:{size:10},boxWidth:10} }
+    }
+  }
+});
+
+// ── 7. Volume por UF ─────────────────────────────────────────
+new Chart(document.getElementById('ufChart'), {
+  type: 'bar',
+  data: {
+    labels: P.uf_labels,
+    datasets: [{
+      data: P.uf_vol,
+      backgroundColor: 'rgba(167,139,250,.4)',
+      borderColor: C.purple,
+      borderWidth: 1.5,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    ...DEF,
+    plugins: {
+      ...DEF.plugins,
+      tooltip: {
+        ...DEF.plugins.tooltip,
+        callbacks: {
+          label: ctx => `R$ ${ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits:0})}`
+        }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}
