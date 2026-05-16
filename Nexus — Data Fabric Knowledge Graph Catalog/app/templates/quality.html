@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Qualidade{% endblock %}
+{% block page_title %}✅ Qualidade de Dados{% endblock %}
+
+{% block head %}
+<style>
+.kpi-grid-q{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:24px}
+.kpi-box-q{
+  flex:1;min-width:140px;
+  background:var(--bg2,#111827);
+  border:1px solid var(--border,#2a3a50);
+  border-radius:12px;padding:16px;
+  position:relative;overflow:hidden;
+}
+.kpi-box-q::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.kpi-box-q.c-teal::after{background:#00d4aa}
+.kpi-box-q.c-blue::after{background:#4f8ef7}
+.kpi-box-q.c-gold::after{background:#f7c94f}
+.kpi-box-q.c-green::after{background:#4ade80}
+.kpi-box-q.c-red::after{background:#ff5a7e}
+.kpi-num-q{font-size:22px;font-weight:700;color:#e2e8f0;font-family:monospace}
+.kpi-lbl-q{font-size:11px;color:#94a3b8;margin-top:4px}
+.kpi-tag-q{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-top:5px;background:rgba(255,90,126,.15);color:#ff5a7e}
+
+.q-card{background:var(--bg2,#111827);border:1px solid var(--border,#2a3a50);border-radius:12px;margin-bottom:16px}
+.q-card-header{padding:14px 18px;border-bottom:1px solid var(--border,#2a3a50)}
+.q-card-title{font-size:13px;font-weight:600;color:#e2e8f0}
+.q-card-body{padding:18px}
+
+.qb-item{margin-bottom:14px}
+.qb-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.qb-name{font-family:monospace;font-size:12px;color:#94a3b8}
+.qb-right{display:flex;align-items:center;gap:8px}
+.qb-pct{font-size:11px;color:#e2e8f0;font-weight:500}
+.badge-ok{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3);border-radius:20px;font-size:10px;font-weight:600;padding:2px 8px}
+.badge-warn{background:rgba(247,201,79,.12);color:#f7c94f;border:1px solid rgba(247,201,79,.3);border-radius:20px;font-size:10px;font-weight:600;padding:2px 8px}
+.badge-err{background:rgba(255,90,126,.12);color:#ff5a7e;border:1px solid rgba(255,90,126,.3);border-radius:20px;font-size:10px;font-weight:600;padding:2px 8px}
+
+.qb-track{height:8px;background:#1e2a3a;border-radius:4px;overflow:hidden;width:100%}
+.qb-fill{height:8px;border-radius:4px;transition:width .6s ease}
+
+.fonte-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.fonte-card{background:#1a2332;border:1px solid #2a3a50;border-radius:10px;padding:14px}
+.fonte-label{font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:4px}
+.fonte-val{font-family:monospace;font-size:11px;color:#94a3b8;line-height:1.5}
+</style>
+{% endblock %}
+
+{% block content %}
+{% set q = quality_data %}
+
+<!-- KPIs -->
+<div class="kpi-grid-q">
+  <div class="kpi-box-q c-teal">
+    <div class="kpi-num-q">{{ q.completude_media_pct }}%</div>
+    <div class="kpi-lbl-q">Completude média da base</div>
+  </div>
+  <div class="kpi-box-q c-blue">
+    <div class="kpi-num-q">{{ '{:,}'.format(q.rows_base) }}</div>
+    <div class="kpi-lbl-q">Registros integrados</div>
+  </div>
+  <div class="kpi-box-q c-gold">
+    <div class="kpi-num-q">{{ q.cols_base }}</div>
+    <div class="kpi-lbl-q">Colunas integradas</div>
+  </div>
+  <div class="kpi-box-q c-green">
+    <div class="kpi-num-q">{{ q.duplicates }}</div>
+    <div class="kpi-lbl-q">Registros duplicados</div>
+  </div>
+  <div class="kpi-box-q c-red">
+    <div class="kpi-num-q">{{ q.fraude_total }}</div>
+    <div class="kpi-lbl-q">Fraudes detectadas</div>
+    <div class="kpi-tag-q">{{ q.fraude_pct }}% do total</div>
+  </div>
+</div>
+
+<!-- Barras de completude -->
+<div class="q-card">
+  <div class="q-card-header">
+    <div class="q-card-title">📉 Completude por coluna — % de valores preenchidos</div>
+  </div>
+  <div class="q-card-body">
+    {% set null_cols = q.null_percent_by_column.items()|list|sort(attribute=1, reverse=True) %}
+    {% for col, pct in null_cols[:35] %}
+      {% set filled = 100 - pct %}
+      <div class="qb-item">
+        <div class="qb-row">
+          <span class="qb-name">{{ col }}</span>
+          <div class="qb-right">
+            <span class="qb-pct">{{ "%.1f"|format(filled) }}% preenchido</span>
+            {% if pct == 0 %}
+              <span class="badge-ok">✓ completo</span>
+            {% elif pct < 5 %}
+              <span class="badge-warn">⚠ {{ "%.1f"|format(pct) }}% nulos</span>
+            {% else %}
+              <span class="badge-err">✗ {{ "%.1f"|format(pct) }}% nulos</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="qb-track">
+          <div class="qb-fill" style="
+            width: {{ filled }}%;
+            background: {% if pct == 0 %}#00d4aa{% elif pct < 5 %}#f7c94f{% else %}#ff5a7e{% endif %};
+          "></div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Proveniência -->
+<div class="q-card">
+  <div class="q-card-header">
+    <div class="q-card-title">🌐 Proveniência das fontes integradas</div>
+  </div>
+  <div class="q-card-body">
+    <div class="fonte-grid">
+      {% for key, label in [
+        ('fonte_agencias',   'Agências'),
+        ('fonte_produtos',   'Produtos'),
+        ('fonte_transacoes', 'Transações'),
+        ('fonte_clientes',   'Clientes'),
+        ('fonte_contratos',  'Contratos')
+      ] %}
+      <div class="fonte-card">
+        <div class="fonte-label">{{ label }}</div>
+        <div class="fonte-val">{{ q[key] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Detecção de Fraudes{% endblock %}
+{% block page_title %}🚨 Detecção de Fraudes — Credit Card{% endblock %}
+
+{% block head %}
+<style>
+.kpi-grid-f{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:22px}
+.kpi-box-f{
+  flex:1;min-width:150px;
+  background:var(--bg2,#111827);
+  border:1px solid var(--border,#2a3a50);
+  border-radius:12px;padding:18px 16px;
+  position:relative;overflow:hidden;
+}
+.kpi-box-f::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.kpi-box-f.c-red::after{background:#ff5a7e}
+.kpi-box-f.c-teal::after{background:#00d4aa}
+.kpi-box-f.c-gold::after{background:#f7c94f}
+.kpi-box-f.c-blue::after{background:#4f8ef7}
+.kpi-icon-f{font-size:22px;margin-bottom:10px;display:block}
+.kpi-num-f{font-size:22px;font-weight:700;color:#e2e8f0;font-family:monospace;line-height:1}
+.kpi-num-f.sm{font-size:17px}
+.kpi-lbl-f{font-size:11px;color:#94a3b8;margin-top:5px;font-weight:500}
+.kpi-tag-f{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-top:6px;background:rgba(255,90,126,.15);color:#ff5a7e;border:1px solid rgba(255,90,126,.3)}
+
+.fraud-card{background:var(--bg2,#111827);border:1px solid var(--border,#2a3a50);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.fraud-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border,#2a3a50);flex-wrap:wrap;gap:10px}
+.fraud-card-title{font-size:13px;font-weight:600;color:#e2e8f0}
+
+.search-wrap{display:flex;align-items:center;gap:8px}
+.search-inp{background:#1a2332;border:1px solid #2a3a50;border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:13px;outline:none;width:200px}
+.search-inp:focus{border-color:#00d4aa}
+.btn-filter{background:#00d4aa;color:#0b1120;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-export{background:rgba(255,90,126,.15);color:#ff5a7e;border:1px solid rgba(255,90,126,.3);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+
+.f-table{width:100%;border-collapse:collapse}
+.f-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #2a3a50;white-space:nowrap}
+.f-table td{padding:10px 14px;font-size:12px;color:#94a3b8;border-bottom:1px solid rgba(42,58,80,.4);white-space:nowrap}
+.f-table tr:last-child td{border-bottom:none}
+.f-table tr:hover td{background:rgba(255,255,255,.03);color:#e2e8f0}
+
+.f-id{color:#00d4aa;font-family:monospace;font-weight:600}
+.f-val{color:#f7c94f;font-family:monospace}
+.f-score{display:flex;align-items:center;gap:6px}
+.score-track{width:60px;height:5px;background:#1e2a3a;border-radius:3px;overflow:hidden;display:inline-block}
+.score-fill{height:5px;background:#ff5a7e;border-radius:3px}
+.f-tag{background:rgba(255,90,126,.15);color:#ff5a7e;border:1px solid rgba(255,90,126,.3);border-radius:20px;font-size:10px;font-weight:700;padding:2px 8px}
+
+.pag-wrap{padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.pag-info{font-size:12px;color:#64748b}
+.pag-btns{display:flex;gap:6px}
+.pag-btn{width:32px;height:32px;border-radius:7px;border:1px solid #2a3a50;background:#1a2332;color:#94a3b8;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.pag-btn.active{background:#00d4aa;color:#0b1120;border-color:#00d4aa;font-weight:700}
+.pag-btn:hover:not(.active){border-color:#344860;color:#e2e8f0}
+
+.note{font-size:11px;color:#64748b;margin-top:8px;line-height:1.6}
+</style>
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('export_frauds') }}" class="btn-export">⬇ Exportar CSV</a>
+{% endblock %}
+
+{% block content %}
+{% set s = stats %}
+
+<!-- KPIs -->
+<div class="kpi-grid-f">
+  <div class="kpi-box-f c-red">
+    <span class="kpi-icon-f">🚨</span>
+    <div class="kpi-num-f">{{ '{:,}'.format(s.fraudes) }}</div>
+    <div class="kpi-lbl-f">Fraudes detectadas</div>
+    <span class="kpi-tag-f">{{ s.pct }}% do total</span>
+  </div>
+  <div class="kpi-box-f c-teal">
+    <span class="kpi-icon-f">🔍</span>
+    <div class="kpi-num-f">{{ '{:,}'.format(s.total) }}</div>
+    <div class="kpi-lbl-f">Total de transações analisadas</div>
+  </div>
+  <div class="kpi-box-f c-gold">
+    <span class="kpi-icon-f">💸</span>
+    <div class="kpi-num-f sm">R$ {{ '{:,.2f}'.format(s.fraud_vol) }}</div>
+    <div class="kpi-lbl-f">Volume total fraudulento</div>
+  </div>
+  <div class="kpi-box-f c-blue">
+    <span class="kpi-icon-f">📊</span>
+    <div class="kpi-num-f sm">R$ {{ '{:,.2f}'.format(s.avg_val) }}</div>
+    <div class="kpi-lbl-f">Ticket médio geral</div>
+  </div>
+</div>
+
+<!-- Tabela -->
+<div class="fraud-card">
+  <div class="fraud-card-header">
+    <div class="fraud-card-title">🔴 Transações fraudulentas detectadas</div>
+    <form method="get" class="search-wrap">
+      <input type="text" name="q" value="{{ q }}" placeholder="Buscar por agência…" class="search-inp">
+      <button type="submit" class="btn-filter">Filtrar</button>
+    </form>
+  </div>
+
+  <div style="overflow-x:auto">
+    <table class="f-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Data</th>
+          <th>Valor</th>
+          <th>Anomaly Score</th>
+          <th>Agência</th>
+          <th>Produto</th>
+          <th>Cliente</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td class="f-id">#{{ r.id_transacao }}</td>
+          <td style="font-family:monospace;font-size:11px">{{ r.transacao_data or '—' }}</td>
+          <td class="f-val">R$ {{ "%.2f"|format(r.transacao_valor|float) }}</td>
+          <td>
+            <div class="f-score">
+              <div class="score-track">
+                <div class="score-fill" style="width:{{ [r.anomaly_score|float * 4, 100]|min if r.anomaly_score else 0 }}%"></div>
+              </div>
+              <span style="font-family:monospace;font-size:11px">{{ "%.4f"|format(r.anomaly_score|float) }}</span>
+            </div>
+          </td>
+          <td>{{ r.nome_agencia or '—' }}</td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">{{ r.produto_nome or '—' }}</td>
+          <td>{{ r.cliente_nome or '—' }}</td>
+          <td><span class="f-tag">🚨 Fraude</span></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align:center;color:#64748b;padding:48px">
+            Nenhuma fraude encontrada{% if q %} para "{{ q }}"{% endif %}.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pag-wrap">
+    <span class="pag-info">{{ total }} registros encontrados</span>
+    <div class="pag-btns">
+      {% if page > 1 %}
+        <a href="?q={{ q }}&page={{ page-1 }}" class="pag-btn">‹</a>
+      {% endif %}
+      {% for i in range([1, page-2]|max, [pages+1, page+3]|min) %}
+        <a href="?q={{ q }}&page={{ i }}" class="pag-btn {% if i == page %}active{% endif %}">{{ i }}</a>
+      {% endfor %}
+      {% if page < pages %}
+        <a href="?q={{ q }}&page={{ page+1 }}" class="pag-btn">›</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  💡 <strong>Fonte:</strong> Credit Card Fraud Detection — Kaggle/MLG-ULB (Dal Pozzolo et al., 2015).
+  <strong>Anomaly Score</strong> = média(|V1|, |V3|, |V4|) — componentes PCA mais discriminantes para detecção de fraudes.
+  Score elevado = maior probabilidade de fraude.
+</div>
+{% endblock %}
